@@ -7,13 +7,11 @@
     "default_timeout_ms": 12000,
     "user_data_dir": "./cache/browser-profile",
     "launch_args": [
-      "--single-process",
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
       "--disable-gpu",
       "--disable-background-networking",
-      "--disable-extensions",
       "--disable-features=Translate,site-per-process",
       "--disable-blink-features=AutomationControlled",
       "--mute-audio"
@@ -21,21 +19,21 @@
   },
   "performance": {
     "enable_request_blocking": true,
-    "block_resource_types": ["image", "media", "font"],
+    "block_resource_types": ["media", "font"],
     "block_ad_domains": ["doubleclick.net", "googlesyndication.com", "adsystem"],
-    "wait_after_navigation_ms": 250,
+    "wait_after_navigation_ms": 500,
     "low_memory_mode": true
   },
   "stealth": {
     "enabled": true,
     "delay_range_ms": {
-      "min": 35,
-      "max": 150
+      "min": 80,
+      "max": 250
     },
     "navigator_overrides": {
-      "hardware_concurrency": 4,
-      "device_memory": 4,
-      "platform": "Linux armv8l",
+      "hardware_concurrency": 8,
+      "device_memory": 8,
+      "platform": "Win32",
       "language": "en-US"
     }
   },
@@ -63,7 +61,7 @@
     "max_stream_chunks": 12
   },
   "device_profile": {
-    "name": "raspberry_pi_4"
+    "name": "desktop_chrome_win"
   },
   "logging": {
     "level": "INFO",

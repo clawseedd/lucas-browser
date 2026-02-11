@@ -15,6 +15,23 @@ from src.utils.helpers import ensure_directory
 from src.utils.logger import get_logger
 
 
+# Stealth launch args that make Chromium harder to detect as automated.
+_STEALTH_ARGS = [
+    "--disable-blink-features=AutomationControlled",
+    "--disable-features=AutomationControlled",
+    "--disable-infobars",
+    "--disable-background-timer-throttling",
+    "--disable-backgrounding-occluded-windows",
+    "--disable-renderer-backgrounding",
+    "--disable-component-update",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--password-store=basic",
+    "--use-mock-keychain",
+    "--export-tagged-pdf",
+]
+
+
 class BrowserManager:
     """Manage Playwright browser, context, and pooled pages."""
 
@@ -38,6 +55,7 @@ class BrowserManager:
         self.stealth_engine = StealthEngine(config["stealth"], self.device_profile)
 
         self._route_installed_pages: set[int] = set()
+        self._stealth_instance = None  # lazy-loaded playwright-stealth Stealth object
 
     async def _import_playwright(self):
         try:
@@ -48,13 +66,37 @@ class BrowserManager:
             ) from exc
         return async_playwright
 
+    async def _load_stealth(self) -> None:
+        """Lazily load playwright-stealth so it is an optional dependency."""
+        if self._stealth_instance is not None:
+            return
+        try:
+            from playwright_stealth import Stealth
+
+            self._stealth_instance = Stealth()
+            self.logger.info("playwright-stealth loaded successfully")
+        except ImportError:
+            self.logger.warning(
+                "playwright-stealth is not installed; stealth page patches will be skipped. "
+                "Install it with: pip install playwright-stealth"
+            )
+            self._stealth_instance = None
+
     def _launch_options(self) -> dict[str, Any]:
         downloads_dir = ensure_directory(self.config["extraction"]["download_directory"])
         ensure_directory(self.browser_config.get("user_data_dir", "./cache/browser-profile"))
 
+        # Merge config launch_args with built-in stealth args (deduplicated).
+        configured_args = list(self.browser_config.get("launch_args", []))
+        merged_args: list[str] = list(configured_args)
+        existing_set = set(configured_args)
+        for arg in _STEALTH_ARGS:
+            if arg not in existing_set:
+                merged_args.append(arg)
+
         options: dict[str, Any] = {
             "headless": bool(self.browser_config.get("headless", True)),
-            "args": list(self.browser_config.get("launch_args", [])),
+            "args": merged_args,
             "downloads_path": str(downloads_dir),
         }
 
@@ -88,6 +130,7 @@ class BrowserManager:
             return
 
         async_playwright = await self._import_playwright()
+        await self._load_stealth()
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(**self._launch_options())
         await self._create_context(storage_state_path=storage_state_path)
@@ -155,10 +198,19 @@ class BrowserManager:
         await page.route("**/*", route_handler)
         self._route_installed_pages.add(page_id)
 
+    async def _apply_stealth_to_page(self, page: Any) -> None:
+        """Apply playwright-stealth patches to an individual page."""
+        if self._stealth_instance is not None:
+            try:
+                await self._stealth_instance.apply_stealth_async(page)
+            except Exception as exc:
+                self.logger.warning("playwright-stealth page patch failed: %s", exc)
+
     async def _configure_page(self, page: Any) -> None:
         page.set_default_navigation_timeout(int(self.browser_config.get("navigation_timeout_ms", 45000)))
         page.set_default_timeout(int(self.browser_config.get("default_timeout_ms", 12000)))
 
+        await self._apply_stealth_to_page(page)
         await self._install_routing(page)
         self.network_monitor.attach(page)
 
