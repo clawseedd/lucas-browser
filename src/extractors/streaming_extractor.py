@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
 
 from src.utils.helpers import chunk_text
 
@@ -20,7 +20,7 @@ class StreamingExtractor:
         max_tokens: int = 4000,
         chars_per_token: float = 4.0,
         selector: str = "main, article, body",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         text = await page.eval_on_selector(
             selector,
             "el => (el.innerText || '').replace(/\\s+/g, ' ').trim()",

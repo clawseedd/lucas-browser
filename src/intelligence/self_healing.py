@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import tempfile
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
 
 from src.utils.helpers import normalize_space, utc_now_iso
 from src.utils.logger import get_logger
@@ -25,7 +28,7 @@ class LocatedElement:
 class SelfHealer:
     """Find elements with direct selectors, cache hits, and semantic fallbacks."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.logger = get_logger(__name__)
         self.enabled = bool(config.get("enabled", True))
@@ -37,7 +40,7 @@ class SelfHealer:
         self.strategies = list(config.get("strategies", ["direct", "cache", "text", "semantic"]))
         self._cache = self._load_cache()
 
-    def _load_cache(self) -> Dict[str, Dict[str, str]]:
+    def _load_cache(self) -> dict[str, dict[str, str]]:
         if not self.cache_file.exists():
             return {}
         try:
@@ -49,7 +52,20 @@ class SelfHealer:
 
     def _save_cache(self) -> None:
         self.cache_file.parent.mkdir(parents=True, exist_ok=True)
-        self.cache_file.write_text(json.dumps(self._cache, indent=2), encoding="utf-8")
+        # Atomic write via temp file + rename to prevent corruption on crash
+        fd, tmp_path = tempfile.mkstemp(
+            dir=str(self.cache_file.parent), suffix=".tmp"
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(self._cache, f, indent=2)
+            os.replace(tmp_path, str(self.cache_file))
+        except BaseException:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     def _key(self, url: str, logical_name: str) -> str:
         return f"{url}::{logical_name}"
@@ -108,7 +124,7 @@ class SelfHealer:
         return sorted(tokens)
 
     @staticmethod
-    def _score_candidate(candidate: Dict[str, Any], tokens: list[str], text_hint: str) -> float:
+    def _score_candidate(candidate: dict[str, Any], tokens: list[str], text_hint: str) -> float:
         text_hint = text_hint.lower().strip()
         score = 0.0
         fields = {
@@ -271,7 +287,7 @@ class SelfHealer:
     async def locate(
         self,
         page: Any,
-        selectors: List[str],
+        selectors: list[str],
         logical_name: str,
         text_hint: str = "",
         semantic_hint: str = "",

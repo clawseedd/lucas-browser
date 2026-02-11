@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from src.utils.helpers import ensure_directory
 
@@ -23,7 +22,7 @@ class SessionManager:
         await context.storage_state(path=str(path))
         return str(path)
 
-    def get(self, name: str) -> Optional[str]:
+    def get(self, name: str) -> str | None:
         path = self.session_path(name)
         if path.exists():
             return str(path)

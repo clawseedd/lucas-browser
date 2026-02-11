@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 try:
     import yaml  # type: ignore
@@ -13,7 +13,7 @@ except Exception:  # pragma: no cover - optional dependency in tests
     yaml = None
 
 
-DEFAULT_CONFIG: Dict[str, Any] = {
+DEFAULT_CONFIG: dict[str, Any] = {
     "browser": {
         "headless": True,
         "executable_path": "",
@@ -75,7 +75,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
     "logging": {"level": "INFO", "file": "./logs/agent.log"},
 }
 
-DEFAULT_DEVICE_PROFILES: Dict[str, Any] = {
+DEFAULT_DEVICE_PROFILES: dict[str, Any] = {
     "default_profile": "raspberry_pi_4",
     "profiles": {
         "raspberry_pi_4": {
@@ -89,7 +89,7 @@ DEFAULT_DEVICE_PROFILES: Dict[str, Any] = {
 }
 
 
-def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any]:
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     result = deepcopy(base)
     for key, value in (override or {}).items():
         if isinstance(value, dict) and isinstance(result.get(key), dict):
@@ -99,7 +99,7 @@ def _deep_merge(base: Dict[str, Any], override: Dict[str, Any]) -> Dict[str, Any
     return result
 
 
-def _parse_text(raw: str, file_path: Path) -> Dict[str, Any]:
+def _parse_text(raw: str, file_path: Path) -> dict[str, Any]:
     raw = raw.strip()
     if not raw:
         return {}
@@ -118,7 +118,7 @@ def _parse_text(raw: str, file_path: Path) -> Dict[str, Any]:
     return loaded or {}
 
 
-def _read_yaml(path: Path) -> Dict[str, Any]:
+def _read_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     return _parse_text(path.read_text(encoding="utf-8"), path)
@@ -140,7 +140,7 @@ def _bounded_float(value: Any, default: float, min_value: float, max_value: floa
     return max(min_value, min(max_value, parsed))
 
 
-def validate_config(config: Dict[str, Any]) -> Dict[str, Any]:
+def validate_config(config: dict[str, Any]) -> dict[str, Any]:
     merged = _deep_merge(DEFAULT_CONFIG, config)
 
     merged["browser"]["max_tabs"] = _bounded_int(merged["browser"].get("max_tabs"), 2, 1)
@@ -184,7 +184,7 @@ def validate_config(config: Dict[str, Any]) -> Dict[str, Any]:
     return merged
 
 
-def load_config(config_path: str = "config/config.yaml") -> Dict[str, Any]:
+def load_config(config_path: str = "config/config.yaml") -> dict[str, Any]:
     config_file = Path(config_path).resolve()
     config_dir = config_file.parent
 

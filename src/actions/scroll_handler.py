@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 
 class ScrollHandler:
@@ -15,7 +15,7 @@ class ScrollHandler:
         max_scrolls: int = 20,
         scroll_delay_sec: float = 0.8,
         stop_if_no_new_content: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         max_scrolls = max(1, int(max_scrolls))
         previous_height = await page.evaluate("() => document.body.scrollHeight")
         no_change_count = 0

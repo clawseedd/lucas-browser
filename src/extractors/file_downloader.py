@@ -3,13 +3,36 @@
 from __future__ import annotations
 
 import hashlib
+import ipaddress
+import socket
 import urllib.parse
 import urllib.request
-from http.cookiejar import CookieJar
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from src.utils.helpers import ensure_directory, sanitize_filename
+
+_ALLOWED_SCHEMES = {"http", "https"}
+
+
+def _validate_url(url: str) -> None:
+    """Block file://, ftp://, and private/loopback IPs to prevent SSRF."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in _ALLOWED_SCHEMES:
+        raise ValueError(f"URL scheme '{parsed.scheme}' is not allowed; use http or https")
+
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("URL has no hostname")
+
+    try:
+        resolved = socket.getaddrinfo(hostname, None, proto=socket.IPPROTO_TCP)
+        for _, _, _, _, sockaddr in resolved:
+            addr = ipaddress.ip_address(sockaddr[0])
+            if addr.is_private or addr.is_loopback or addr.is_reserved:
+                raise ValueError(f"URL resolves to private/reserved address: {addr}")
+    except socket.gaierror:
+        pass  # DNS resolution may fail in tests; actual request will raise
 
 
 class FileDownloader:
@@ -32,7 +55,12 @@ class FileDownloader:
     def _target_path(self, filename: str | None, url: str, subdirectory: str | None = None) -> Path:
         if not filename:
             parsed = urllib.parse.urlparse(url)
-            filename = Path(parsed.path).name or f"download-{hash(url) & 0xFFFFF}.bin"
+            basename = Path(parsed.path).name
+            if not basename:
+                # Use deterministic hash instead of non-deterministic hash()
+                url_hash = hashlib.sha256(url.encode()).hexdigest()[:12]
+                basename = f"download-{url_hash}.bin"
+            filename = basename
 
         safe_name = sanitize_filename(filename)
         directory = self.download_directory / sanitize_filename(subdirectory, "") if subdirectory else self.download_directory
@@ -46,7 +74,8 @@ class FileDownloader:
         headers: dict[str, str] | None = None,
         subdirectory: str | None = None,
         timeout_sec: int = 120,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
+        _validate_url(url)
         target = self._target_path(filename, url, subdirectory=subdirectory)
         request = urllib.request.Request(url, headers=headers or {})
 
@@ -71,7 +100,7 @@ class FileDownloader:
         selector: str,
         filename: str | None = None,
         subdirectory: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         href = await page.get_attribute(selector, "href")
         if not href:
             href = await page.get_attribute(selector, "src")

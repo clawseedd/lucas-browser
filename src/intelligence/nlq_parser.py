@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict
+from typing import Any
 
 from src.utils.helpers import unique_ordered
 
@@ -69,7 +69,7 @@ class NLQParser:
 
         return unique_ordered(selector_parts)
 
-    def parse_field(self, field_name: str, spec: Dict[str, Any] | None = None) -> ParsedField:
+    def parse_field(self, field_name: str, spec: dict[str, Any] | None = None) -> ParsedField:
         spec = spec or {}
         field_type = str(spec.get("type") or self.infer_type(field_name)).lower()
 
@@ -94,9 +94,13 @@ class NLQParser:
             text_hint=str(spec.get("text_hint") or field_name.replace("_", " ")),
         )
 
-    def parse_query(self, query: Dict[str, Any]) -> Dict[str, ParsedField]:
-        fields = query.get("fields") if isinstance(query.get("fields"), dict) else query
-        parsed: Dict[str, ParsedField] = {}
+    def parse_query(self, query: dict[str, Any]) -> dict[str, ParsedField]:
+        raw_fields = query.get("fields")
+        if isinstance(raw_fields, dict):
+            fields = raw_fields
+        else:
+            fields = query
+        parsed: dict[str, ParsedField] = {}
         for name, spec in fields.items():
             parsed[name] = self.parse_field(name, spec if isinstance(spec, dict) else {})
         return parsed

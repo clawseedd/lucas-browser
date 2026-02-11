@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from src.utils.helpers import sleep_random
 
@@ -14,12 +14,12 @@ class InteractionHandler:
         self.delay_min_ms = delay_min_ms
         self.delay_max_ms = delay_max_ms
 
-    async def click(self, page: Any, selector: str) -> Dict[str, Any]:
+    async def click(self, page: Any, selector: str) -> dict[str, Any]:
         await page.locator(selector).first.click()
         await sleep_random(self.delay_min_ms, self.delay_max_ms)
         return {"success": True, "action": "click", "selector": selector}
 
-    async def type_text(self, page: Any, selector: str, text: str, clear_first: bool = True) -> Dict[str, Any]:
+    async def type_text(self, page: Any, selector: str, text: str, clear_first: bool = True) -> dict[str, Any]:
         locator = page.locator(selector).first
         if clear_first:
             await locator.fill("")

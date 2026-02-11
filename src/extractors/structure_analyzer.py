@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from src.intelligence.self_healing import SelfHealer
 
@@ -20,7 +20,7 @@ class StructureAnalyzer:
         logical_name: str = "target",
         text_hint: str = "",
         semantic_hint: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         located = await self.self_healer.locate(
             page,
             [selector],

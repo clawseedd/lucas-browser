@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 
 class ContentPreviewer:
     """Create lightweight page previews to reduce extraction cost."""
 
-    async def preview(self, page: Any, max_sections: int = 20) -> Dict[str, Any]:
+    async def preview(self, page: Any, max_sections: int = 20) -> dict[str, Any]:
         payload = await page.evaluate(
             r"""
             (limit) => {

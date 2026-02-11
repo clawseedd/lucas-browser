@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import Any, Dict, Deque, List
+from typing import Any
 
 from src.utils.helpers import utc_now_iso
 
@@ -13,7 +13,7 @@ class NetworkMonitor:
 
     def __init__(self, max_events: int = 500):
         self.max_events = max(100, int(max_events))
-        self.events: Deque[Dict[str, Any]] = deque(maxlen=self.max_events)
+        self.events: deque[dict[str, Any]] = deque(maxlen=self.max_events)
 
     def attach(self, page: Any) -> None:
         page.on("request", self._on_request)
@@ -54,6 +54,6 @@ class NetworkMonitor:
             }
         )
 
-    def get_recent_calls(self, limit: int = 50) -> List[Dict[str, Any]]:
+    def get_recent_calls(self, limit: int = 50) -> list[dict[str, Any]]:
         limit = max(1, int(limit))
         return list(self.events)[-limit:]

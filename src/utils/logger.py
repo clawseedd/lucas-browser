@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
-def setup_logging(config: Dict[str, Any] | None = None) -> None:
+def setup_logging(config: dict[str, Any] | None = None) -> None:
     config = config or {}
     level_name = str(config.get("level", "INFO")).upper()
     level = getattr(logging, level_name, logging.INFO)

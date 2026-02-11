@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from src.stealth.fingerprint_manager import FingerprintManager
 from src.utils.helpers import sleep_random
@@ -11,7 +11,7 @@ from src.utils.helpers import sleep_random
 class StealthEngine:
     """Apply anti-bot evasions and human-like timing jitter."""
 
-    def __init__(self, stealth_config: Dict[str, Any], device_profile: Dict[str, Any]):
+    def __init__(self, stealth_config: dict[str, Any], device_profile: dict[str, Any]):
         self.stealth_config = stealth_config
         self.enabled = bool(stealth_config.get("enabled", True))
         self.delay_range = stealth_config.get("delay_range_ms", {"min": 0, "max": 0})

@@ -6,9 +6,9 @@ import asyncio
 import math
 import random
 import re
+from collections.abc import Iterable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Iterable, List
 
 
 def utc_now_iso() -> str:
@@ -57,7 +57,7 @@ async def sleep_random(min_ms: int, max_ms: int) -> None:
     await asyncio.sleep(delay_ms / 1000)
 
 
-def chunk_text(text: str, chunk_size: int) -> List[str]:
+def chunk_text(text: str, chunk_size: int) -> list[str]:
     chunk_size = max(1, int(chunk_size))
     text = normalize_space(text)
     return [text[index : index + chunk_size] for index in range(0, len(text), chunk_size)]

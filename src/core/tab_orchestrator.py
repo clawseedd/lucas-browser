@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any
 
 
 class TabOrchestrator:
@@ -15,12 +16,12 @@ class TabOrchestrator:
     async def extract_from_multiple_pages(
         self,
         urls: Iterable[str],
-        query: Dict[str, Any],
+        query: dict[str, Any],
         max_concurrent: int = 2,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         semaphore = asyncio.Semaphore(max(1, int(max_concurrent)))
 
-        async def worker(index: int, url: str) -> Dict[str, Any]:
+        async def worker(index: int, url: str) -> dict[str, Any]:
             tab_id = f"parallel_{index}"
             async with semaphore:
                 try:

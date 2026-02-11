@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Dict
+from typing import Any
 
 from src.actions.form_filler import FormFiller
 from src.actions.interaction_handler import InteractionHandler
@@ -19,7 +19,7 @@ from src.extractors.table_extractor import TableExtractor
 from src.intelligence.relevance_filter import RelevanceFilter
 from src.intelligence.self_healing import SelfHealer
 from src.utils.config_loader import load_config
-from src.utils.logger import setup_logging, get_logger
+from src.utils.logger import get_logger, setup_logging
 
 
 class BrowserAgent:
@@ -69,17 +69,17 @@ class BrowserAgent:
     async def stop(self) -> None:
         await self.browser_manager.stop()
 
-    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> Dict[str, Any]:
+    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> dict[str, Any]:
         return await self.browser_manager.navigate(url, tab_id=tab_id, wait_until=wait_until)
 
     async def get_page(self, tab_id: str = "default"):
         return await self.browser_manager.get_page(tab_id)
 
-    async def extract_with_nlq(self, query: Dict[str, Any], tab_id: str = "default") -> Dict[str, Any]:
+    async def extract_with_nlq(self, query: dict[str, Any], tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.content_extractor.extract_with_nlq(page, query)
 
-    async def preview_content(self, tab_id: str = "default") -> Dict[str, Any]:
+    async def preview_content(self, tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         result = await self.content_previewer.preview(page)
         return {"success": True, **result}
@@ -90,7 +90,7 @@ class BrowserAgent:
         min_score: float = 0.6,
         max_items: int = 25,
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         items = await self.relevance_filter.filter_page_elements(
             page,
@@ -106,7 +106,7 @@ class BrowserAgent:
         chars_per_token: float = 4.0,
         selector: str = "main, article, body",
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.streaming_extractor.extract_with_budget(
             page,
@@ -115,7 +115,7 @@ class BrowserAgent:
             selector=selector,
         )
 
-    async def extract_tables(self, selector: str = "table", tab_id: str = "default") -> Dict[str, Any]:
+    async def extract_tables(self, selector: str = "table", tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         tables = await self.table_extractor.extract_tables(page, selector)
         return {"success": True, "selector": selector, "count": len(tables), "tables": tables}
@@ -127,7 +127,7 @@ class BrowserAgent:
         logical_name: str = "target",
         text_hint: str = "",
         semantic_hint: str = "",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.structure_analyzer.capture_structure(
             page,
@@ -144,12 +144,15 @@ class BrowserAgent:
         selector: str | None = None,
         filename: str | None = None,
         subdirectory: str | None = None,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         if not url and not selector:
             raise ValueError("download_file requires `url` or `selector`")
 
         if url:
             return self.file_downloader.download_url(url, filename=filename, subdirectory=subdirectory)
+
+        if selector is None:
+            raise ValueError("download_file requires `url` or `selector`")
 
         page = await self.get_page(tab_id)
         return await self.file_downloader.download_from_selector(
@@ -169,7 +172,7 @@ class BrowserAgent:
         submit_selector: str,
         session_name: str = "default",
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         await page.goto(url, wait_until="domcontentloaded")
         await page.locator(username_selector).first.fill(username)
@@ -187,10 +190,10 @@ class BrowserAgent:
             "current_url": page.url,
         }
 
-    async def load_session(self, session_name: str = "default") -> Dict[str, Any]:
+    async def load_session(self, session_name: str = "default") -> dict[str, Any]:
         return await self.browser_manager.load_session(session_name)
 
-    async def click(self, selector: str, tab_id: str = "default") -> Dict[str, Any]:
+    async def click(self, selector: str, tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.interactions.click(page, selector)
 
@@ -200,27 +203,27 @@ class BrowserAgent:
         text: str,
         clear_first: bool = True,
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.interactions.type_text(page, selector, text, clear_first=clear_first)
 
-    async def screenshot(self, path: str, full_page: bool = False, tab_id: str = "default") -> Dict[str, Any]:
+    async def screenshot(self, path: str, full_page: bool = False, tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         await page.screenshot(path=path, full_page=full_page)
         return {"success": True, "path": path, "full_page": full_page}
 
-    async def detect_forms(self, tab_id: str = "default") -> Dict[str, Any]:
+    async def detect_forms(self, tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         forms = await self.form_filler.detect_forms(page)
         return {"success": True, "forms": forms, "count": len(forms)}
 
     async def fill_form(
         self,
-        field_values: Dict[str, Any],
+        field_values: dict[str, Any],
         form_selector: str | None = None,
         submit: bool = False,
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.form_filler.fill_form(page, field_values, form_selector=form_selector, submit=submit)
 
@@ -230,7 +233,7 @@ class BrowserAgent:
         scroll_delay_sec: float = 0.8,
         stop_if_no_new_content: bool = True,
         tab_id: str = "default",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
         return await self.scroll_handler.auto_scroll(
             page,
@@ -239,16 +242,16 @@ class BrowserAgent:
             stop_if_no_new_content=stop_if_no_new_content,
         )
 
-    async def get_network_calls(self, limit: int = 50) -> Dict[str, Any]:
+    async def get_network_calls(self, limit: int = 50) -> dict[str, Any]:
         calls = self.browser_manager.network_monitor.get_recent_calls(limit=limit)
         return {"success": True, "count": len(calls), "calls": calls}
 
     async def extract_parallel(
         self,
         urls: list[str],
-        query: Dict[str, Any],
+        query: dict[str, Any],
         max_concurrent: int = 2,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         results = await self.tab_orchestrator.extract_from_multiple_pages(
             urls,
             query=query,
@@ -260,7 +263,7 @@ class BrowserAgent:
             "results": results,
         }
 
-    async def run_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+    async def run_task(self, task: dict[str, Any]) -> dict[str, Any]:
         started = self.browser_manager.resource_monitor.snapshot()
         results = []
         tab_id = task.get("tab_id", "default")

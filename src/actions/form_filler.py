@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
+
 
 class FormFiller:
     """Detect and fill forms using field names/labels."""
 
-    async def detect_forms(self, page: Any) -> List[Dict[str, Any]]:
+    async def detect_forms(self, page: Any) -> list[dict[str, Any]]:
         forms = await page.evaluate(
             """
             () => {
@@ -31,10 +32,10 @@ class FormFiller:
     async def fill_form(
         self,
         page: Any,
-        field_values: Dict[str, Any],
+        field_values: dict[str, Any],
         form_selector: str | None = None,
         submit: bool = False,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         prefix = f"{form_selector} " if form_selector else ""
         filled_fields = []
 

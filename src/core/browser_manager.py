@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 from src.core.network_monitor import NetworkMonitor
 from src.core.page_pool import PagePool
@@ -18,7 +18,7 @@ from src.utils.logger import get_logger
 class BrowserManager:
     """Manage Playwright browser, context, and pooled pages."""
 
-    def __init__(self, config: Dict[str, Any]):
+    def __init__(self, config: dict[str, Any]):
         self.config = config
         self.logger = get_logger(__name__)
 
@@ -48,11 +48,11 @@ class BrowserManager:
             ) from exc
         return async_playwright
 
-    def _launch_options(self) -> Dict[str, Any]:
+    def _launch_options(self) -> dict[str, Any]:
         downloads_dir = ensure_directory(self.config["extraction"]["download_directory"])
         ensure_directory(self.browser_config.get("user_data_dir", "./cache/browser-profile"))
 
-        options: Dict[str, Any] = {
+        options: dict[str, Any] = {
             "headless": bool(self.browser_config.get("headless", True)),
             "args": list(self.browser_config.get("launch_args", [])),
             "downloads_path": str(downloads_dir),
@@ -67,8 +67,8 @@ class BrowserManager:
 
         return options
 
-    def _context_options(self, storage_state_path: str | None = None) -> Dict[str, Any]:
-        options: Dict[str, Any] = {
+    def _context_options(self, storage_state_path: str | None = None) -> dict[str, Any]:
+        options: dict[str, Any] = {
             "accept_downloads": True,
             "locale": self.device_profile.get("locale", "en-US"),
             "timezone_id": self.device_profile.get("timezone_id", "UTC"),
@@ -184,7 +184,7 @@ class BrowserManager:
     async def close_tab(self, tab_id: str) -> None:
         await self.page_pool.close_tab(tab_id)
 
-    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> Dict[str, Any]:
+    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         response = await page.goto(url, wait_until=wait_until)
 
@@ -206,6 +206,6 @@ class BrowserManager:
             await self.start()
         return await self.session_manager.save(self.context, name)
 
-    async def load_session(self, name: str) -> Dict[str, Any]:
+    async def load_session(self, name: str) -> dict[str, Any]:
         loaded = await self.restart_with_session(name)
         return {"success": loaded, "session_name": name}

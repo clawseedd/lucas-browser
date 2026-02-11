@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 from src.extractors.table_extractor import TableExtractor
 from src.intelligence.nlq_parser import NLQParser
@@ -31,9 +31,9 @@ class ContentExtractor:
         return text
 
     def _cast_value(self, raw: str | None, field_type: str):
-        text = normalize_space(raw)
         if raw is None:
             return None
+        text = normalize_space(raw)
 
         if field_type == "number":
             return parse_number(text)
@@ -48,7 +48,7 @@ class ContentExtractor:
 
         return text[: self.max_text_length]
 
-    async def extract_with_nlq(self, page: Any, query: Dict[str, Any]) -> Dict[str, Any]:
+    async def extract_with_nlq(self, page: Any, query: dict[str, Any]) -> dict[str, Any]:
         parsed = self.nlq_parser.parse_query(query)
 
         data: dict[str, Any] = {}

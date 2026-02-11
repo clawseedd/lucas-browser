@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 
 class ResourceMonitor:
@@ -19,7 +19,7 @@ class ResourceMonitor:
             self._process = None
             self._psutil = None
 
-    def snapshot(self) -> Dict[str, Any]:
+    def snapshot(self) -> dict[str, Any]:
         if self._process is None:
             return {"available": False}
 

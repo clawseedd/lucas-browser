@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterable, List
+from collections.abc import Iterable
+from typing import Any
 
 from src.utils.helpers import normalize_space
 
@@ -37,7 +38,7 @@ class RelevanceFilter:
         keywords: Iterable[str] | None = None,
         min_score: float = 0.6,
         max_items: int = 25,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         keyword_list = [normalize_space(item).lower() for item in (keywords or []) if normalize_space(item)]
 
         elements = await page.evaluate(
