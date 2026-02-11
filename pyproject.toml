@@ -7,14 +7,40 @@ name = "lucas-browser-skill"
 version = "1.0.0"
 description = "Headless OpenClaw browser skill powered by Python + Playwright"
 requires-python = ">=3.10"
+license = "MIT"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
 dependencies = [
   "playwright>=1.49.0",
-  "PyYAML>=6.0.1"
+  "PyYAML>=6.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ruff>=0.4.0",
 ]
 
 [project.scripts]
 lucas-browser = "src.cli:main"
 
-[tool.setuptools]
-py-modules = []
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501", "E402", "SIM105", "SIM108"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
