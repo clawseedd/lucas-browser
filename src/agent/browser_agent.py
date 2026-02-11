@@ -362,6 +362,17 @@ class BrowserAgent:
                         selector=action.get("selector", "main, article, body"),
                         tab_id=action.get("tab_id", tab_id),
                     )
+                elif action_type == "type":
+                    action_tab_id = action.get("tab_id", tab_id)
+                    payload = await self.type_text(
+                        selector=action["selector"],
+                        text=action.get("text", ""),
+                        clear_first=bool(action.get("clear_first", True)),
+                        tab_id=action_tab_id,
+                    )
+                    if action.get("press_enter"):
+                        page = await self.get_page(action_tab_id)
+                        await page.keyboard.press("Enter")
                 elif action_type == "fill_form":
                     payload = await self.fill_form(
                         field_values=action.get("field_values", {}),
@@ -376,6 +387,10 @@ class BrowserAgent:
                         stop_if_no_new_content=bool(action.get("stop_if_no_new_content", True)),
                         tab_id=action.get("tab_id", tab_id),
                     )
+                elif action_type == "click":
+                    action_tab_id = action.get("tab_id", tab_id)
+                    page = await self.get_page(action_tab_id)
+                    payload = await self.interactions.click(page, action["selector"])
                 elif action_type == "network_calls":
                     payload = await self.get_network_calls(limit=int(action.get("limit", 50)))
                 elif action_type == "parallel_extract":
