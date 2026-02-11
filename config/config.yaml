@@ -56,6 +56,7 @@
   },
   "extraction": {
     "download_directory": "./downloads",
+    "extract_retries": 2,
     "max_table_rows": 1000,
     "max_text_length": 12000,
     "stream_chunk_chars": 1800,

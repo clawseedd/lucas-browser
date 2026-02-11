@@ -18,11 +18,13 @@ class ContentExtractor:
         self_healer: SelfHealer,
         max_text_length: int = 12000,
         max_table_rows: int = 1000,
+        extract_retries: int = 2,
     ):
         self.nlq_parser = NLQParser()
         self.self_healer = self_healer
         self.max_text_length = max(500, int(max_text_length))
         self.table_extractor = TableExtractor(max_table_rows=max_table_rows)
+        self.extract_retries = max(0, int(extract_retries))
 
     async def _extract_text_or_attr(self, element: Any, attribute: str | None) -> str | None:
         if attribute:
@@ -82,13 +84,17 @@ class ContentExtractor:
                 }
                 continue
 
-            located = await self.self_healer.locate(
-                page,
-                field.selectors,
-                logical_name=field.name,
-                text_hint=field.text_hint or "",
-                semantic_hint=field.name,
-            )
+            located = None
+            for _ in range(self.extract_retries + 1):
+                located = await self.self_healer.locate(
+                    page,
+                    field.selectors,
+                    logical_name=field.name,
+                    text_hint=field.text_hint or "",
+                    semantic_hint=field.name,
+                )
+                if located is not None:
+                    break
 
             if located is None:
                 data[field_name] = None

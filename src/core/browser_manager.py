@@ -184,7 +184,7 @@ class BrowserManager:
     async def close_tab(self, tab_id: str) -> None:
         await self.page_pool.close_tab(tab_id)
 
-    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> dict[str, Any]:
+    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "load") -> dict[str, Any]:
         page = await self.get_page(tab_id)
         response = await page.goto(url, wait_until=wait_until)
 

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import base64
+from pathlib import Path
 from typing import Any
 
 from src.actions.form_filler import FormFiller
@@ -40,10 +42,13 @@ class BrowserAgent:
             self_healer=self.self_healer,
             max_text_length=extraction_cfg.get("max_text_length", 12000),
             max_table_rows=extraction_cfg.get("max_table_rows", 1000),
+            extract_retries=extraction_cfg.get("extract_retries", 2),
         )
         self.table_extractor = TableExtractor(max_table_rows=extraction_cfg.get("max_table_rows", 1000))
         self.structure_analyzer = StructureAnalyzer(self.self_healer)
-        self.file_downloader = FileDownloader(download_directory=extraction_cfg.get("download_directory", "./downloads"))
+        self.file_downloader = FileDownloader(
+            download_directory=extraction_cfg.get("download_directory", "./downloads")
+        )
         self.content_previewer = ContentPreviewer()
         self.streaming_extractor = StreamingExtractor(
             chunk_chars=extraction_cfg.get("stream_chunk_chars", 1800),
@@ -69,7 +74,7 @@ class BrowserAgent:
     async def stop(self) -> None:
         await self.browser_manager.stop()
 
-    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "domcontentloaded") -> dict[str, Any]:
+    async def navigate(self, url: str, tab_id: str = "default", wait_until: str = "load") -> dict[str, Any]:
         return await self.browser_manager.navigate(url, tab_id=tab_id, wait_until=wait_until)
 
     async def get_page(self, tab_id: str = "default"):
@@ -207,10 +212,20 @@ class BrowserAgent:
         page = await self.get_page(tab_id)
         return await self.interactions.type_text(page, selector, text, clear_first=clear_first)
 
-    async def screenshot(self, path: str, full_page: bool = False, tab_id: str = "default") -> dict[str, Any]:
+    async def screenshot(
+        self,
+        path: str,
+        full_page: bool = False,
+        include_base64: bool = False,
+        tab_id: str = "default",
+    ) -> dict[str, Any]:
         page = await self.get_page(tab_id)
-        await page.screenshot(path=path, full_page=full_page)
-        return {"success": True, "path": path, "full_page": full_page}
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        raw_bytes = await page.screenshot(path=path, full_page=full_page)
+        result: dict[str, Any] = {"success": True, "path": path, "full_page": full_page}
+        if include_base64:
+            result["base64"] = base64.b64encode(raw_bytes).decode("ascii")
+        return result
 
     async def detect_forms(self, tab_id: str = "default") -> dict[str, Any]:
         page = await self.get_page(tab_id)
@@ -283,10 +298,38 @@ class BrowserAgent:
 
                 if action_type == "navigate":
                     payload = await self.navigate(action["url"], tab_id=action.get("tab_id", tab_id))
+                elif action_type == "goto":
+                    payload = await self.navigate(
+                        action["url"],
+                        tab_id=action.get("tab_id", tab_id),
+                        wait_until=action.get("wait_until", "load"),
+                    )
                 elif action_type == "extract":
-                    payload = await self.extract_with_nlq(action.get("query") or action.get("spec") or {}, tab_id=action.get("tab_id", tab_id))
+                    query = action.get("query") or action.get("spec") or {}
+                    if not query and action.get("fields"):
+                        query = {"fields": action.get("fields")}
+                    payload = await self.extract_with_nlq(
+                        query,
+                        tab_id=action.get("tab_id", tab_id),
+                    )
+                elif action_type == "sleep":
+                    ms = action.get("ms")
+                    if ms is None:
+                        seconds = float(action.get("seconds", 0))
+                        ms = int(seconds * 1000)
+                    await asyncio.sleep(int(ms) / 1000)
+                    payload = {"success": True, "slept_ms": int(ms)}
+                elif action_type == "screenshot":
+                    payload = await self.screenshot(
+                        path=action["path"],
+                        full_page=bool(action.get("full_page", False)),
+                        include_base64=bool(action.get("include_base64", False)),
+                        tab_id=action.get("tab_id", tab_id),
+                    )
                 elif action_type == "extract_tables":
-                    payload = await self.extract_tables(action.get("selector", "table"), tab_id=action.get("tab_id", tab_id))
+                    payload = await self.extract_tables(
+                        action.get("selector", "table"), tab_id=action.get("tab_id", tab_id)
+                    )
                 elif action_type == "capture_structure":
                     payload = await self.capture_structure(
                         action["selector"],
