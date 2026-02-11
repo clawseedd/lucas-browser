@@ -1,0 +1,71 @@
+{
+  "browser": {
+    "headless": true,
+    "executable_path": "/usr/bin/chromium-browser",
+    "max_tabs": 2,
+    "navigation_timeout_ms": 45000,
+    "default_timeout_ms": 12000,
+    "user_data_dir": "./cache/browser-profile",
+    "launch_args": [
+      "--single-process",
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-background-networking",
+      "--disable-extensions",
+      "--disable-features=Translate,site-per-process",
+      "--disable-blink-features=AutomationControlled",
+      "--mute-audio"
+    ]
+  },
+  "performance": {
+    "enable_request_blocking": true,
+    "block_resource_types": ["image", "media", "font"],
+    "block_ad_domains": ["doubleclick.net", "googlesyndication.com", "adsystem"],
+    "wait_after_navigation_ms": 250,
+    "low_memory_mode": true
+  },
+  "stealth": {
+    "enabled": true,
+    "delay_range_ms": {
+      "min": 35,
+      "max": 150
+    },
+    "navigator_overrides": {
+      "hardware_concurrency": 4,
+      "device_memory": 4,
+      "platform": "Linux armv8l",
+      "language": "en-US"
+    }
+  },
+  "self_healing": {
+    "enabled": true,
+    "timeout_ms": 1500,
+    "cache_file": "./cache/selectors.json",
+    "cache_ttl_hours": 168,
+    "max_candidates": 1800,
+    "similarity_threshold": 3.5,
+    "strategies": ["direct", "cache", "text", "semantic"]
+  },
+  "sessions": {
+    "enabled": true,
+    "directory": "./cache/sessions",
+    "default_name": "default",
+    "auto_save_after_login": true
+  },
+  "extraction": {
+    "download_directory": "./downloads",
+    "max_table_rows": 1000,
+    "max_text_length": 12000,
+    "stream_chunk_chars": 1800,
+    "max_stream_chunks": 12
+  },
+  "device_profile": {
+    "name": "raspberry_pi_4"
+  },
+  "logging": {
+    "level": "INFO",
+    "file": "./logs/agent.log"
+  }
+}

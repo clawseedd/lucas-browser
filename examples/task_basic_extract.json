@@ -1,0 +1,15 @@
+{
+  "url": "https://example.com",
+  "query": {
+    "fields": {
+      "page_title": {"selectors": ["h1"], "type": "text"},
+      "page_link": {"selectors": ["a"], "type": "link"}
+    }
+  },
+  "actions": [
+    {"type": "preview"},
+    {"type": "capture_structure", "selector": "h1", "logical_name": "main_heading"},
+    {"type": "relevance_filter", "keywords": ["example", "domain"], "min_score": 0.5},
+    {"type": "stream_extract", "max_tokens": 1200}
+  ]
+}

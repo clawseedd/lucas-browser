@@ -1,0 +1,3 @@
+interface:
+  display_name: "LUCAS Browser"
+  short_description: "Python Playwright browser extraction with self-healing selectors"

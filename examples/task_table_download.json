@@ -1,0 +1,7 @@
+{
+  "url": "https://example.com/data",
+  "actions": [
+    {"type": "extract_tables", "selector": "table"},
+    {"type": "download", "selector": "a.download-report", "filename": "report.csv", "subdirectory": "reports"}
+  ]
+}

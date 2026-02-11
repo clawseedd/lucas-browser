@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lucas-browser-skill"
+version = "1.0.0"
+description = "Headless OpenClaw browser skill powered by Python + Playwright"
+requires-python = ">=3.10"
+dependencies = [
+  "playwright>=1.49.0",
+  "PyYAML>=6.0.1"
+]
+
+[project.scripts]
+lucas-browser = "src.cli:main"
+
+[tool.setuptools]
+py-modules = []
+
